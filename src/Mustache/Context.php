@@ -123,6 +123,7 @@ class Mustache_Context
      * @param string $id Dotted variable selector
      *
      * @return mixed Variable value, or '' if not found
+     * 
      */
     public function findDot($id)
     {
@@ -131,13 +132,33 @@ class Mustache_Context
         $value  = $this->findVariableInStack($first, $this->stack);
 
         foreach ($chunks as $chunk) {
-            if ($value === '') {
-                return $value;
+            $start = $chunk;
+            $end = $chunk;
+            $length = 1;
+            if(strpos($chunk, '-') > 0) {
+                $range = explode('-', $chunk);
+                $start = array_shift($range);
+                $end = array_shift($range);
+                $length = $end -$start  + 1;
             }
 
-            $value = $this->findVariableInStack($chunk, array($value));
-        }
 
+            if ($value === '') {
+                return $value;
+            } elseif (is_string($value)) {
+                $value = substr($value, $start, $length);
+            } else{
+                $tempvalue = [];
+                $current = $start;
+                if($current <= $end){
+                while($current <= $end){
+                    $tempvalue[] = $this->findVariableInStack($current, array($value));
+                    $current++;
+                }
+            }
+                $value = $tempvalue;
+            }
+        }
         return $value;
     }
 
